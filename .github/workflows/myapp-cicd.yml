@@ -70,8 +70,8 @@ jobs:
       run: docker rmi $DOCKER_IMAGE_NAME:$RELEASE_VERSION
 
   deploy_on_kuber:
-    # Job name that shows in the GitHub UI
-    name: Deploy Docker Images
+    needs: build_docker_images
+    name: Deploy Images on kuber
     environment: prod
     # Runner to use
     # runs-on: self-hosted
@@ -86,4 +86,12 @@ jobs:
 
     - name: kuber deploy
       run: kubectl apply -f kuber/myapp.yml
-      
+
+  check_site:
+    needs: deploy_on_kuber
+    name: Curl check site
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: curl check
+        run: curl -I http://178.154.205.25:30111
