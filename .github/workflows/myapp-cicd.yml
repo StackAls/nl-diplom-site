@@ -71,6 +71,7 @@ jobs:
       run: docker rmi $DOCKER_IMAGE_NAME:$RELEASE_VERSION
 
   deploy_on_kuber:
+    needs: build_docker_images
     name: Deploy Images on kuber
     environment: prod
     # Runner to use
@@ -78,6 +79,15 @@ jobs:
     runs-on: master-1
 
     steps:
+    - name: Get the release version
+      # i.e.: release/1.0.0 -> 1.0.0
+      id: strip-branch-name
+      run: |
+        release_version=$(echo "${{ github.ref }}" | sed 's/refs\/heads\/.*\///')
+        echo "Building release version $release_version"
+        echo "RELEASE_VERSION=$release_version" >> $GITHUB_ENV
+        # shell: bash
+        
     - uses: actions/checkout@v4
       with:
         repository: StackAls/nl-diplom
