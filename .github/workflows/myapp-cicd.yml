@@ -80,6 +80,8 @@ jobs:
     steps:
     - uses: actions/checkout@v4
       with:
+        repository: StackAls/nl-diplom
+        path: nl-diplom
         sparse-checkout: |
           kuber/myapp.yml
         sparse-checkout-cone-mode: false
