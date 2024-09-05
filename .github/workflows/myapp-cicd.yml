@@ -16,6 +16,7 @@ jobs:
   build_docker_images:
     # Job name that shows in the GitHub UI
     name: Build Docker Images
+    environment: prod
     # Runner to use
     # runs-on: self-hosted
     runs-on: ubuntu-latest
