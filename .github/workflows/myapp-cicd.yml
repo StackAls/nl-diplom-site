@@ -45,7 +45,7 @@ jobs:
       run: docker tag $DOCKER_IMAGE_NAME:$RELEASE_VERSION $DOCKER_REGISTRY_URL/$DOCKER_IMAGE_NAME:latest
 
     - name: Login to Yandex registry
-      run: echo "${{ secrets.YA_OAUTH }}" | docker login --username oauth --password-stdin cr.yandex
+      run: echo ${{ secrets.YA_OAUTH }} | docker login --username oauth --password-stdin cr.yandex
 
     # Push the images to the registry
     - name: Push the Docker image with version number
