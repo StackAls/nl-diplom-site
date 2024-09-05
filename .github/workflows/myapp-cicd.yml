@@ -9,8 +9,9 @@ on:
       - 'release/**'
 
 env:
-  DOCKER_IMAGE_NAME: my-image
+  DOCKER_IMAGE_NAME: nginx
   DOCKER_REGISTRY_URL: cr.yandex
+  DOCKER_REGISTRY_ID: crp3d0vsnc3no3t2sntn
 
 jobs:
   build_docker_images:
@@ -40,29 +41,30 @@ jobs:
 
     # Tag the Docker Images
     - name: Tag the image for the private registry $DOCKER_REGISTRY_URL
-      run: docker tag $DOCKER_IMAGE_NAME:$RELEASE_VERSION $DOCKER_REGISTRY_URL/$DOCKER_IMAGE_NAME:$RELEASE_VERSION
+      run: docker tag $DOCKER_IMAGE_NAME:$RELEASE_VERSION $DOCKER_REGISTRY_URL/$DOCKER_REGISTRY_ID/$DOCKER_IMAGE_NAME:$RELEASE_VERSION
 
     - name: Create a latest image as well
-      run: docker tag $DOCKER_IMAGE_NAME:$RELEASE_VERSION $DOCKER_REGISTRY_URL/$DOCKER_IMAGE_NAME:latest
+      run: docker tag $DOCKER_IMAGE_NAME:$RELEASE_VERSION $DOCKER_REGISTRY_URL/$DOCKER_REGISTRY_ID/$DOCKER_IMAGE_NAME:latest
 
     - name: Login to Yandex registry
-      env:
-        YA_OAUTH: ${{ secrets.YA_OAUTH }}
-      run: echo $YA_OAUTH | docker login --username oauth --password-stdin cr.yandex
+      # env:
+      #   YA_OAUTH: ${{ secrets.YA_OAUTH }}
+      # run: echo $YA_OAUTH | docker login --username oauth --password-stdin cr.yandex
+      run: echo ${{ secrets.YA_OAUTH }} | docker login --username oauth --password-stdin cr.yandex
 
     # Push the images to the registry
     - name: Push the Docker image with version number
-      run: docker push $DOCKER_REGISTRY_URL/$DOCKER_IMAGE_NAME:$RELEASE_VERSION
+      run: docker push $DOCKER_REGISTRY_URL/$DOCKER_REGISTRY_ID/$DOCKER_IMAGE_NAME:$RELEASE_VERSION
 
     - name: Push the latest tag
-      run: docker push $DOCKER_REGISTRY_URL/$DOCKER_IMAGE_NAME:latest
+      run: docker push $DOCKER_REGISTRY_URL/$DOCKER_REGISTRY_ID/$DOCKER_IMAGE_NAME:latest
 
     # Remove the local images
     - name: Remove the Docker image with version number
-      run: docker rmi $DOCKER_REGISTRY_URL/$DOCKER_IMAGE_NAME:$RELEASE_VERSION
+      run: docker rmi $DOCKER_REGISTRY_URL/$DOCKER_REGISTRY_ID/$DOCKER_IMAGE_NAME:$RELEASE_VERSION
 
     - name: Remove the Docker image with latest tag
-      run: docker rmi $DOCKER_REGISTRY_URL/$DOCKER_IMAGE_NAME:latest
+      run: docker rmi $DOCKER_REGISTRY_URL/$DOCKER_REGISTRY_ID/$DOCKER_IMAGE_NAME:latest
 
     - name: Remove the local image
       run: docker rmi $DOCKER_IMAGE_NAME:$RELEASE_VERSION
