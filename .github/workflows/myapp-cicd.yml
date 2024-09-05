@@ -95,6 +95,9 @@ jobs:
         sparse-checkout: |
           kuber/myapp.yml
         sparse-checkout-cone-mode: false
+    
+    - name: kuber remove deployment
+      run: kubectl delete -f kuber/myapp.yml
 
     - name: kuber deploy
       run: sed 's/latest/'"$RELEASE_VERSION"'/g' kuber/myapp.yml | kubectl apply -f -
