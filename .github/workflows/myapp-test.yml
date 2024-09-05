@@ -1,12 +1,10 @@
-name: Deploy prod
+name: Build image
 
 on:
   # Trigger the action manually from the UI
   workflow_dispatch:
-  # Trigger the action when I create or push a `release/**` branch
+  # Trigger the action push
   push:
-    branches:
-      - 'master'
 
 env:
   DOCKER_IMAGE_NAME: nginx
@@ -26,74 +24,31 @@ jobs:
     - name: Checkout
       uses: actions/checkout@v3
 
-    - name: Get the release version
-      # i.e.: release/1.0.0 -> 1.0.0
-      id: strip-branch-name
-      run: |
-        release_version=$(echo "${{ github.ref }}" | sed 's/refs\/heads\/.*\///')
-        echo "Building release version $release_version"
-        echo "RELEASE_VERSION=$release_version" >> $GITHUB_ENV
-        # shell: bash
-
     # Build the Docker image
     - name: Build the Docker image
-      run: docker build . --file Dockerfile --tag $DOCKER_IMAGE_NAME:$RELEASE_VERSION
+      run: docker build . --file Dockerfile --tag $DOCKER_IMAGE_NAME:${{ github.sha }}
 
     # Tag the Docker Images
-    - name: Tag the image for the private registry $DOCKER_REGISTRY_URL
-      run: docker tag $DOCKER_IMAGE_NAME:$RELEASE_VERSION $DOCKER_REGISTRY_URL/$DOCKER_REGISTRY_ID/$DOCKER_IMAGE_NAME:$RELEASE_VERSION
 
     - name: Create a latest image as well
-      run: docker tag $DOCKER_IMAGE_NAME:$RELEASE_VERSION $DOCKER_REGISTRY_URL/$DOCKER_REGISTRY_ID/$DOCKER_IMAGE_NAME:latest
+      run: docker tag $DOCKER_IMAGE_NAME:${{ github.sha }} $DOCKER_REGISTRY_URL/$DOCKER_REGISTRY_ID/$DOCKER_IMAGE_NAME:${{ github.sha }}
 
-    - name: Login to Yandex registry
-      # env:
-      #   YA_OAUTH: ${{ secrets.YA_OAUTH }}
-      # run: echo $YA_OAUTH | docker login --username oauth --password-stdin cr.yandex
-      run: echo ${{ secrets.YA_OAUTH }} | docker login --username oauth --password-stdin cr.yandex
+    # - name: Login to Yandex registry
+    #   # env:
+    #   #   YA_OAUTH: ${{ secrets.YA_OAUTH }}
+    #   # run: echo $YA_OAUTH | docker login --username oauth --password-stdin cr.yandex
+    #   run: echo ${{ secrets.YA_OAUTH }} | docker login --username oauth --password-stdin cr.yandex
+
+    - name: Log in to Yandex container registry
+      uses: docker/login-action@v2
+      with:
+        registry: $DOCKER_REGISTRY_URL
+        username: oauth
+        password: ${{ secrets.YA_OAUTH }}
 
     # Push the images to the registry
     - name: Push the Docker image with version number
-      run: docker push $DOCKER_REGISTRY_URL/$DOCKER_REGISTRY_ID/$DOCKER_IMAGE_NAME:$RELEASE_VERSION
-
-    - name: Push the latest tag
-      run: docker push $DOCKER_REGISTRY_URL/$DOCKER_REGISTRY_ID/$DOCKER_IMAGE_NAME:latest
-
-    # Remove the local images
-    - name: Remove the Docker image with version number
-      run: docker rmi $DOCKER_REGISTRY_URL/$DOCKER_REGISTRY_ID/$DOCKER_IMAGE_NAME:$RELEASE_VERSION
-
-    - name: Remove the Docker image with latest tag
-      run: docker rmi $DOCKER_REGISTRY_URL/$DOCKER_REGISTRY_ID/$DOCKER_IMAGE_NAME:latest
+      run: docker push $DOCKER_REGISTRY_URL/$DOCKER_REGISTRY_ID/$DOCKER_IMAGE_NAME:${{ github.sha }}
 
     - name: Remove the local image
-      run: docker rmi $DOCKER_IMAGE_NAME:$RELEASE_VERSION
-
-  deploy_on_kuber:
-    needs: build_docker_images
-    name: Deploy Images on kuber
-    environment: prod
-    # Runner to use
-    # runs-on: self-hosted
-    runs-on: master-1
-
-    steps:
-    - uses: actions/checkout@v4
-      with:
-        repository: StackAls/nl-diplom
-        path: nl-diplom
-        sparse-checkout: |
-          kuber/myapp.yml
-        sparse-checkout-cone-mode: false
-
-    - name: kuber deploy
-      run: kubectl apply -f kuber/myapp.yml
-
-  check_site:
-    needs: deploy_on_kuber
-    name: Curl check site
-    runs-on: ubuntu-latest
-
-    steps:
-      - name: curl check
-        run: curl -I http://178.154.205.25:30111
+      run: docker rmi $DOCKER_IMAGE_NAME:${{ github.sha }}
