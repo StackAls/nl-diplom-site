@@ -87,7 +87,7 @@ jobs:
         sparse-checkout-cone-mode: false
 
     - name: kuber deploy
-      run: kubectl apply -f kuber/myapp.yml
+      run: sed 's/latest/'"$RELEASE_VERSION"'/g' kuber/myapp.yml | kubectl apply -f -
 
   check_site:
     needs: deploy_on_kuber
