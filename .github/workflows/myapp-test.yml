@@ -5,6 +5,8 @@ on:
   workflow_dispatch:
   # Trigger the action push
   push:
+    branches:
+      - '!release/**'
 
 env:
   DOCKER_IMAGE_NAME: nginx
