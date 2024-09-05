@@ -33,18 +33,8 @@ jobs:
     - name: Create a latest image as well
       run: docker tag $DOCKER_IMAGE_NAME:${{ github.sha }} $DOCKER_REGISTRY_URL/$DOCKER_REGISTRY_ID/$DOCKER_IMAGE_NAME:${{ github.sha }}
 
-    # - name: Login to Yandex registry
-    #   # env:
-    #   #   YA_OAUTH: ${{ secrets.YA_OAUTH }}
-    #   # run: echo $YA_OAUTH | docker login --username oauth --password-stdin cr.yandex
-    #   run: echo ${{ secrets.YA_OAUTH }} | docker login --username oauth --password-stdin cr.yandex
-
-    - name: Log in to Yandex container registry
-      uses: docker/login-action@v2
-      with:
-        registry: $DOCKER_REGISTRY_URL
-        username: oauth
-        password: ${{ secrets.YA_OAUTH }}
+    - name: Login to Yandex registry
+      run: echo ${{ secrets.YA_OAUTH }} | docker login --username oauth --password-stdin cr.yandex
 
     # Push the images to the registry
     - name: Push the Docker image with version number
