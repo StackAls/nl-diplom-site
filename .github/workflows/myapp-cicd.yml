@@ -4,8 +4,7 @@ on:
   # Trigger the action manually from the UI
   workflow_dispatch:
   # Trigger the action when I create or push a `release/**` branch
-  pull_request:
-    types: closed
+  push:
     branches:
       - 'release/**'
 
